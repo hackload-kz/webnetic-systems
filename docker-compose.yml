@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: biletter
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - booking-service
+
+  booking-service:
+    build: ./booking-service
+    depends_on:
+      - postgres
+
+  event-service:
+    build: ./event-service
+    depends_on:
+      - postgres
+
+  payment-service:
+    build: ./payment-service
+    depends_on:
+      - postgres
+      - redis
+
+  provider-client:
+    build: ./provider-client
+
+  auth-service:
+    build: ./auth-service
+
+volumes:
+  pgdata:
