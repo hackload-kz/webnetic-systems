@@ -37,7 +37,7 @@ func Run() {
 	log.Println("Successfully connected to database")
 
 	repo := repository.NewPostgresUserRepository(db) 
-	service := usecase.NewAuthService(*repo, jwtSecret)
+	service := usecase.NewAuthService(repo, jwtSecret)
 	handler := handler.NewAuthHandler(service)
 
 	router := http.SetupRoutes(handler)

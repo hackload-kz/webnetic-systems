@@ -12,15 +12,14 @@ import (
 
 	"auth-svc/internal/domain/model"
 	repoModel "auth-svc/internal/domain/repository"
-	"auth-svc/internal/repository"
 )
 
 type AuthService struct {
-	userRepo  repository.PostgresUserRepository
+	userRepo  repoModel.UserRepository
 	JwtSecret string
 }
 
-func NewAuthService(repo repository.PostgresUserRepository, JwtSecret string) *AuthService {
+func NewAuthService(repo repoModel.UserRepository, JwtSecret string) *AuthService {
 	return &AuthService{
 		userRepo:  repo,
 		JwtSecret: JwtSecret,
