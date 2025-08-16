@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: { POSTGRES_DB:postgres }
+      POSTGRES_USER: { POSTGRES_USER:postgres }
+      POSTGRES_PASSWORD: { POSTGRES_PASSWORD:password }
+    ports: ['{POSTGRES_PORT}:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations/init/01-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./migrations/init/02-seed-users.sql:/docker-entrypoint-initdb.d/02-seed-users.sql:ro
+      # если 02-seed-users.sql делает COPY, то users.csv должен быть рядом:
+      - ./migrations/seed/users.csv:/docker-entrypoint-initdb.d/users.csv:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U {POSTGRES_USER:postgres} -d {POSTGRES_DB:postgres}',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports: ['{REDIS_PORT}:6379']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  auth-service:
+    build: .
+    command: ['./app'] 
+    environment:
+      DATABASE_URL: postgresql://{POSTGRES_USER:postgres}:{POSTGRES_PASSWORD:password}@postgres:5432/{POSTGRES_DB:postgres}?sslmode={POSTGRES_SSLMODE:disable}
+      REDIS_ADDR: {REDIS_ADDR:redis}:{REDIS_PORT:6379}
+      PORT: '{AUTH_SERVICE_PORT:8080}'
+    ports: ['{AUTH_SERVICE_PORT:8080}:8080']
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:{AUTH_SERVICE_PORT:8080}/health || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
