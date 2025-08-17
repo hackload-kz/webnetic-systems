@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq" 
 
 	"auth-svc/internal/handler"
 	"auth-svc/internal/repository"

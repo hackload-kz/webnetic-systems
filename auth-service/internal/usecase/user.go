@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-faster/errors"
@@ -38,14 +39,14 @@ func (s *AuthService) verifyPassword(password, hashedPassword, salt string) bool
 
 func (s *AuthService) generateToken(user *model.User) (string, error) {
 	claims := model.AuthClaims{
-		UserID:    user.ID,
+		UserID:    strconv.FormatInt(user.ID, 10),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Subject:   user.ID,
+			Subject:   strconv.FormatInt(user.ID, 10),
 		},
 	}
 
@@ -83,7 +84,7 @@ func (s *AuthService) VerifyUser(ctx context.Context, email, password string) (*
 	}
 
 	// чек пароля
-	if !s.verifyPassword(password, user.Password, user.Salt) {
+	if !s.verifyPassword(password, user.PasswordHash, user.Salt) {
 		return &model.VerifyResponse{
 			Success: false,
 			Message: "Invalid credentials",
@@ -100,7 +101,7 @@ func (s *AuthService) VerifyUser(ctx context.Context, email, password string) (*
 		Success: true,
 		Message: "Authentication successful",
 		User: &model.UserInfo{
-			ID:        user.ID, 
+			ID:        strconv.FormatInt(user.ID, 10), 
 			Email:     user.Email,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
@@ -146,7 +147,7 @@ func (s *AuthService) GetUserByID(ctx context.Context, id int64) (*model.UserInf
 	}
 
 	return &model.UserInfo{
-		ID:        user.ID,
+		ID:        strconv.FormatInt(user.ID, 10),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
@@ -154,7 +155,8 @@ func (s *AuthService) GetUserByID(ctx context.Context, id int64) (*model.UserInf
 	}, nil
 }
 
-// Метод для получения пользователя по Email
+// доп метод для получения пользователя по email
+// используется в других сервисах, например в gateway для получения информации о пользователе
 func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*model.UserInfo, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
@@ -165,7 +167,7 @@ func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*model.
 	}
 
 	return &model.UserInfo{
-		ID:        user.ID,
+		ID:        strconv.FormatInt(user.ID, 10),
 		Email:     user.Email,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,

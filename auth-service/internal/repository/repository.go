@@ -32,7 +32,7 @@ func (r *PostgresUserRepository) GetByID(ctx context.Context, id int64) (*model.
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID,
 		&user.Email,
-		&user.Password,
+		&user.PasswordHash,
 		&user.Salt,
 		&user.FirstName,
 		&user.LastName,
@@ -68,7 +68,7 @@ func (r *PostgresUserRepository) GetByEmail(ctx context.Context, email string) (
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Email,
-		&user.Password,
+		&user.PasswordHash,
 		&user.Salt,
 		&user.FirstName,
 		&user.LastName,
